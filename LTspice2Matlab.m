@@ -258,6 +258,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
     elseif ~isempty(strfind( lower(raw_data.plotname), 'ac analysis' )),                  simulation_type = '.ac';     %SUPPORTED
     elseif ~isempty(strfind( lower(raw_data.plotname), 'dc transfer characteristic' )),   simulation_type = '.dc';     %This is a DC sweep (Not supported)
     elseif ~isempty(strfind( lower(raw_data.plotname), 'operating point' )),              simulation_type = '.op';     %This is a DC operating point (Not supported)
+    elseif ~isempty(strfind( lower(raw_data.plotname), 'transfer function' )),            simulation_type = '.tf';     %This is a Transfer function (Not supported)
     end
     
     if isempty(simulation_type) || ~(strcmpi(simulation_type, '.tran') || strcmpi(simulation_type, '.ac')),
@@ -290,6 +291,11 @@ function raw_data = LTspice2Matlab( filename, varargin )
     if strcmpi(simulation_type, '.op') && isempty(strfind( lower(raw_data.flags), 'real' )),
         try fclose( fid );  catch, end
         error( 'Expected to find "real" flag for an Operating Point (.op) simulation.  Unsure how to convert the data' );
+    end
+    
+    if strcmpi(simulation_type, '.tf') && isempty(strfind( lower(raw_data.flags), 'real' )),
+        try fclose( fid );  catch, end
+        error( 'Expected to find "real" flag for a Transfer function (.tf) simulation.  Unsure how to convert the data' );
     end
     %if isfield( raw_data, 'flags' ),  raw_data = rmfield( raw_data, 'flags' );  end
 
