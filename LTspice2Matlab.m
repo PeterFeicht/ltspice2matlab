@@ -291,15 +291,17 @@ function raw_data = LTspice2Matlab( filename, varargin )
     if     ~isempty(strfind( lower(raw_data.plotname), 'transient analysis' )),           simulation_type = '.tran';
     elseif ~isempty(strfind( lower(raw_data.plotname), 'ac analysis' )),                  simulation_type = '.ac';
     elseif ~isempty(strfind( lower(raw_data.plotname), 'dc transfer characteristic' )),   simulation_type = '.dc';
-    elseif ~isempty(strfind( lower(raw_data.plotname), 'operating point' )),              simulation_type = '.op';     % This is a DC operating point (Not supported)
-    elseif ~isempty(strfind( lower(raw_data.plotname), 'transfer function' )),            simulation_type = '.tf';     % This is a Transfer function (Not supported)
+    elseif ~isempty(strfind( lower(raw_data.plotname), 'operating point' )),              simulation_type = '.op';
+    elseif ~isempty(strfind( lower(raw_data.plotname), 'transfer function' )),            simulation_type = '.tf';
+    elseif ~isempty(strfind( lower(raw_data.plotname), 'fft of time domain data' )),      simulation_type = '.four';
     end
 
     % Check for supported simulation
     if isempty(simulation_type) || ~(strcmpi(simulation_type, '.tran') || strcmpi(simulation_type, '.ac') || ...
-            strcmpi(simulation_type, '.dc') || strcmpi(simulation_type, '.op') || strcmpi(simulation_type, '.tf')),
+            strcmpi(simulation_type, '.dc') || strcmpi(simulation_type, '.op') || strcmpi(simulation_type, '.tf') || ...
+            strcmpi(simulation_type, '.four')),
         try fclose( fid );  catch, end
-        error( 'Currently LTspice2Matlab is only able to import results from Transient Analysis (.tran), AC Analysis (.ac), Operating Point (.op), Transfer Function (.tf) and DC Sweep (.dc) simulations.' );
+        error( 'Currently LTspice2Matlab is only able to import results from Transient Analysis (.tran), AC Analysis (.ac), Operating Point (.op), Transfer Function (.tf), DC Sweep (.dc) simulations and FFT calculations.' );
     end
 
     % Check for the expected formats for every simulation type
@@ -343,6 +345,15 @@ function raw_data = LTspice2Matlab( filename, varargin )
     if strcmpi(simulation_type, '.dc') && isempty(strfind( lower(raw_data.flags), 'forward' )),
         try fclose( fid );  catch, end
         error( 'Expected to find "forward" flag for a DC Sweep (.dc) simulation.  Unsure how to convert the data' );
+    end
+    % .four
+    if strcmpi(simulation_type, '.four') && isempty(strfind( lower(raw_data.flags), 'complex' )),
+        try fclose( fid );  catch, end
+        error( 'Expected to find "complex" flag for an FFT calculation.  Unsure how to convert the data' );
+    end
+    if strcmpi(simulation_type, '.four') && isempty(strfind( lower(raw_data.flags), 'forward' )),
+        try fclose( fid );  catch, end
+        error( 'Expected to find "forward" flag for an FFT calculation.  Unsure how to convert the data' );
     end
 
     % Remove flags field
@@ -459,10 +470,11 @@ function raw_data = LTspice2Matlab( filename, varargin )
                raw_data.source_name = variable_name_list{1};
             end
 
-        elseif strcmpi( simulation_type, '.ac' ),
+        elseif strcmpi( simulation_type, '.ac' ) || strcmpi( simulation_type, '.four' ),
             % For AC Analysis simulations, the frequency data is stored in double precision format (8 + 8 unused bytes),
             % and the variables are stored as complex double precision arrays (8 bytes real followed by 8 bytes imag).
             % For stepped simulations, every step is simply appended.
+            % The same goes for FFT calculations.
 
             % Extract the binary data in the fewest possible number of contiguous blocks
             if length(selected_vars)>1,
@@ -596,7 +608,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
                raw_data.source_name = variable_name_list{1};
             end
 
-        elseif strcmpi( simulation_type, '.ac' ),
+        elseif strcmpi( simulation_type, '.ac' ) || strcmpi( simulation_type, '.four' ),
             % Format:  point number, freq value, 0, var1 real, var1 imag, var2 real, var2 imag ... varN real, varN imag
             all_data = fread( fid, inf, 'uchar' );
             all_data( all_data == ',' ) = sprintf( '\t' );  %Replace commas with tab characters
