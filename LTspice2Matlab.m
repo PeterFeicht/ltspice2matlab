@@ -294,14 +294,15 @@ function raw_data = LTspice2Matlab( filename, varargin )
     elseif ~isempty(strfind( lower(raw_data.plotname), 'operating point' )),              simulation_type = '.op';
     elseif ~isempty(strfind( lower(raw_data.plotname), 'transfer function' )),            simulation_type = '.tf';
     elseif ~isempty(strfind( lower(raw_data.plotname), 'fft of time domain data' )),      simulation_type = '.four';
+    elseif ~isempty(strfind( lower(raw_data.plotname), 'noise spectral density' )),       simulation_type = '.noise';
     end
 
     % Check for supported simulation
     if isempty(simulation_type) || ~(strcmpi(simulation_type, '.tran') || strcmpi(simulation_type, '.ac') || ...
             strcmpi(simulation_type, '.dc') || strcmpi(simulation_type, '.op') || strcmpi(simulation_type, '.tf') || ...
-            strcmpi(simulation_type, '.four')),
+            strcmpi(simulation_type, '.four') || strcmpi(simulation_type, '.noise')),
         try fclose( fid );  catch, end
-        error( 'Currently LTspice2Matlab is only able to import results from Transient Analysis (.tran), AC Analysis (.ac), Operating Point (.op), Transfer Function (.tf), DC Sweep (.dc) simulations and FFT calculations.' );
+        error( 'Currently LTspice2Matlab is only able to import results from Transient Analysis (.tran), AC Analysis (.ac), Operating Point (.op), Transfer Function (.tf), DC Sweep (.dc), Noise (.noise) simulations and FFT calculations.' );
     end
 
     % Check for the expected formats for every simulation type
@@ -354,6 +355,15 @@ function raw_data = LTspice2Matlab( filename, varargin )
     if strcmpi(simulation_type, '.four') && isempty(strfind( lower(raw_data.flags), 'forward' )),
         try fclose( fid );  catch, end
         error( 'Expected to find "forward" flag for an FFT calculation.  Unsure how to convert the data' );
+    end
+    % .noise
+    if strcmpi(simulation_type, '.noise') && isempty(strfind( lower(raw_data.flags), 'real' )),
+        try fclose( fid );  catch, end
+        error( 'Expected to find "real" flag for a Noise simulation.  Unsure how to convert the data' );
+    end
+    if strcmpi(simulation_type, '.noise') && isempty(strfind( lower(raw_data.flags), 'forward' )),
+        try fclose( fid );  catch, end
+        error( 'Expected to find "forward" flag for a Noise simulation.  Unsure how to convert the data' );
     end
 
     % Remove flags field
@@ -413,12 +423,15 @@ function raw_data = LTspice2Matlab( filename, varargin )
     if strcmpi(file_format, 'binary'),
         binary_start = ftell(fid);      % start of binary data section.
 
-        if strcmpi( simulation_type, '.tran' ) || strcmpi( simulation_type, '.dc' ),
+        if strcmpi( simulation_type, '.tran' ) || strcmpi( simulation_type, '.dc' ) || strcmpi( simulation_type, '.noise' ),
             % For Transient Analysis simulations, the time data is stored in double precision floating point binary format,
             % and everything else is stored in single precision format. For stepped simulations, a new step is intoduced
             % by a duplicate start entry.
             % For DC Sweep simulations, the source value is stored in double precision format (8 bytes) and the
             % operating point values in real format. A new step is introduced by a duplicate start entry.
+            % For Noise simulations, the frequency data is stored in double precision floating point binary format,
+            % and gain, output noise and input referred noise are stored in single precision format. It is unknown,
+            % how new steps are introduced.
 
             % Extract the binary data in the fewest possible number of contiguous blocks
             if length(selected_vars)>1,
@@ -467,7 +480,10 @@ function raw_data = LTspice2Matlab( filename, varargin )
             if strcmpi( simulation_type, '.dc' ),
                raw_data.source_vect = raw_data.time_vect;
                raw_data = rmfield( raw_data, 'time_vect' );
-               raw_data.source_name = variable_name_list{1};
+            % Rename time_vect for .noise simulations
+            elseif strcmpi( simulation_type, '.noise' ),
+               raw_data.freq_vect = raw_data.time_vect;
+               raw_data = rmfield( raw_data, 'time_vect' );
             end
 
         elseif strcmpi( simulation_type, '.ac' ) || strcmpi( simulation_type, '.four' ),
