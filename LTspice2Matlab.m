@@ -5,12 +5,8 @@ function raw_data = LTspice2Matlab( filename, varargin )
 %           AC Analysis (.ac) simulation, and converts voltages and currents vs. time into Matlab variables.
 %           This function can read compressed binary, uncompressed binary, and ASCII file formats.  It does not
 %           currently support files saved in the Fast Access Format.  In the case of compressed binary,
-%           the data is automatically uncompressed using fast quadratic point insertion.
-%
-%           LTspice IV is an excellent Spice III simulator & schematic capture tool freely avaliable for download
-%           at www.linear.com/designtools/software.  It is optimized for simulation of switching regulators, but
-%           can simulate many other types of circuits as well and comes with a wide variety of component models.  Note
-%           that the LTspice uses a lossy compression format (enabled by default) with user adjustable error bounds.
+%           the data is automatically uncompressed using fast quadratic point insertion.  Note that LTspice uses
+%           a lossy compression format (enabled by default) with user adjustable error bounds.
 %
 %           Use LTSPICE2MATLAB to import LTspice waveforms into Matlab for additional analysis or to
 %           compare with measured data.
@@ -18,10 +14,10 @@ function raw_data = LTspice2Matlab( filename, varargin )
 %           This function has been tested with LTspice IV version 4.01p, and Matlab versions 6.1 and 7.5.  Regression
 %           testing has been used to expose the function to a wide range of LTspice settings.
 %           Author:     Paul Wagner         2009-04-25
-%           
-%           Not so much testing has been done for the added features (steps and .op, .dc and .tf simulations),
-%           but they should work well at least with uncompressed files and without downsampling.
-%           Modified:   Peter Feichtinger   2013-08-05
+%
+%           Not so much testing has been done for the added features (steps, .op, .dc, .tf, and .noise simulations,
+%           FFT calculations), but they should work well at least with uncompressed files and without downsampling.
+%           Modified:   Peter Feichtinger   2015-04
 %
 %
 %    Calling Convention:
@@ -101,8 +97,9 @@ function raw_data = LTspice2Matlab( filename, varargin )
 %                  ** For stepped simulations that have been properly recognized as such, an additional dimension is
 %                     added to variable_mat and the time, frequency, source or param vector, respectively.
 %
-%    ** Currently this function is able to import results from Transient Analysis (.tran), AC Analysis (.ac)
-%       DC Sweeps (.dc), Operating Point Analysis (.op) and Transfer Function (.tf) simulations only.
+%    ** Currently this function is able to import results from Transient Analysis (.tran), AC Analysis (.ac),
+%       DC Sweeps (.dc), Operating Point Analysis (.op), Transfer Function (.tf) and Noise (.noise) simulations, and
+%       FFT calculations.
 %
 %
 %    Examples
@@ -371,8 +368,9 @@ function raw_data = LTspice2Matlab( filename, varargin )
 
     % Look if selected_vars is a string that says 'all' or similar
     if ischar(selected_vars),
-        if strcmpi(selected_vars, 'all') || strcmpi(selected_vars, 'everything') || strcmpi(selected_vars, 'complete') || strcmpi(selected_vars, 'all variables') || ...
-                strcmpi(selected_vars, 'all vars') || strcmpi(selected_vars, 'every thing') || strcmpi(selected_vars, 'every'),
+        if strcmpi(selected_vars, 'all') || strcmpi(selected_vars, 'everything') || strcmpi(selected_vars, 'complete') || ...
+                strcmpi(selected_vars, 'all variables') || strcmpi(selected_vars, 'all vars') || ...
+                strcmpi(selected_vars, 'every thing') || strcmpi(selected_vars, 'every'),
             selected_vars = 1:raw_data.num_variables;     %Return all variables
         else
             try fclose( fid );  catch, end
@@ -396,7 +394,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
     end
     if ~isempty(find(selected_vars == 0, 1)),
         try fclose( fid );  catch, end
-        error( 'The time vector (index 0) is returned separately.  \n   Values in input parameter SELECTED_VARS must be positive integers >= 1 and <= NUM_VARIABLES' );
+        error( 'The time vector (index 0) is returned separately.\n   Values in input parameter SELECTED_VARS must be positive integers >= 1 and <= NUM_VARIABLES' );
     end
     non_integer_index = find(isnan(selected_vars) | ~isnumeric(selected_vars) | mod( selected_vars, 1 ) ~= 0.0, 1);
     if ~isempty(non_integer_index),
@@ -458,7 +456,8 @@ function raw_data = LTspice2Matlab( filename, varargin )
             % Process stepped data
             if step_flag,
                 if downsamp_N > 1,
-                   warning( 'LTspice2Matlab:downsampleSteps', 'Stepped data found and downsampling enabled. Steps may not be recognized properly.' );
+                    warning( 'LTspice2Matlab:downsampleSteps', ...
+                            'Stepped data found and downsampling enabled. Steps may not be recognized properly.' );
                 end
                 
                 % Stepped data starts on a duplicate entry
