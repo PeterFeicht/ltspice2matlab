@@ -19,6 +19,9 @@ function raw_data = LTspice2Matlab( filename, varargin )
 %           FFT calculations), but they should work well at least with uncompressed files and without downsampling.
 %           Modified:   Peter Feichtinger   2015-04
 %
+%           Support for reading files written by LTspice XVII (which encodes text in UTF-16) added.
+%           Modified:   Peter Feichtinger   2019-02
+%
 %
 %    Calling Convention:
 %        RAW_DATA = LTSPICE2MATLAB( FILENAME );                  %Returns all variables found in FILENAME
@@ -171,6 +174,15 @@ function raw_data = LTspice2Matlab( filename, varargin )
 
 	[filename, ~, machineformat] = fopen(fid);
 
+    % Detect text encoding: LTspice IV uses ASCII, LTspice XVII uses UTF-16
+    utf16 = false;
+    [buf, count] = fread(fid, 2, '*uint8');
+    if count == 2 && any(buf == 0)
+        utf16 = true;
+    end
+    clear buf count;
+    frewind(fid);
+
     % Load header tags & information
     % Variables include voltages and currents only.  Does not include the time vector.
     variable_name_list = {};
@@ -178,7 +190,28 @@ function raw_data = LTspice2Matlab( filename, varargin )
     variable_flag = 0;
     file_format = '';
     while 1
-        the_line = fgetl(fid);
+        if ~utf16
+            the_line = fgetl(fid);
+        else
+            % fopen doesn't know UTF-16, read manually using fread instead.
+            the_line = [];
+            while ~feof(fid)
+                [buf, count] = fread(fid, 100, 'uint16=>char', 0, 'ieee-le');
+                nl = find(buf == newline, 1);
+                if isempty(nl)
+                    the_line = [the_line buf']; %#ok<AGROW>
+                    continue;
+                end
+
+                the_line = [the_line buf(1:nl(1)-1)']; %#ok<AGROW>
+                fseek(fid, (-count + nl(1)) * 2, 0);
+                break;
+            end
+            if isempty(the_line) && feof(fid)
+                % Do as fgetl does
+                the_line = -1;
+            end
+        end
         if ~ischar(the_line)
             try fclose( fid );  catch, end
             error( 'Format error in LTspice file "%s" ... Unexpected end of file', filename );
