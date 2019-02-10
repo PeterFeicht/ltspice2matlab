@@ -1,22 +1,25 @@
 function raw_data = LTspice2Matlab( filename, varargin )
 %
 %
-% LTSPICE2MATLAB -- Reads an LTspice IV .RAW waveform file containing data from a Transient Analysis (.tran) or
-%           AC Analysis (.ac) simulation, and converts voltages and currents vs. time into Matlab variables.
-%           This function can read compressed binary, uncompressed binary, and ASCII file formats.  It does not
-%           currently support files saved in the Fast Access Format.  In the case of compressed binary,
-%           the data is automatically uncompressed using fast quadratic point insertion.  Note that LTspice uses
-%           a lossy compression format (enabled by default) with user adjustable error bounds.
+% LTspice2Matlab -- Reads an LTspice IV or LTspice XVII .raw waveform file containing data from a Transient
+%           Analysis (.tran), AC Analysis (.ac), DC Sweep (.dc), Operating Point (.op), Transfer Function
+%           (.tf), FFT (.four), or Noise (.noise) simulation, and converts voltages and currents vs. time
+%           (or frequency) into MATLAB variables. It also supports import of stepped simulations.
+%           This function can read compressed binary, uncompressed binary, and ASCII file formats. It does
+%           not currently support files saved in the Fast Access Format. In the case of compressed binary,
+%           the data is automatically uncompressed using fast quadratic point insertion. Note that LTspice
+%           uses a lossy compression format (enabled by default) with user adjustable error bounds.
 %
-%           Use LTSPICE2MATLAB to import LTspice waveforms into Matlab for additional analysis or to
+%           Use LTspice2Matlab to import LTspice waveforms into MATLAB for additional analysis or to
 %           compare with measured data.
 %
-%           This function has been tested with LTspice IV version 4.01p, and Matlab versions 6.1 and 7.5.  Regression
-%           testing has been used to expose the function to a wide range of LTspice settings.
+%           This function has been tested with LTspice IV version 4.01p, and MATLAB versions 6.1 and 7.5.
+%           Regression testing has been used to expose the function to a wide range of LTspice settings.
 %           Author:     Paul Wagner         2009-04-25
 %
-%           Not so much testing has been done for the added features (steps, .op, .dc, .tf, and .noise simulations,
-%           FFT calculations), but they should work well at least with uncompressed files and without downsampling.
+%           Not so much testing has been done for the added features (steps, .op, .dc, .tf, and .noise
+%           simulations, FFT calculations), but they should work well at least with uncompressed files and
+%           without downsampling.
 %           Modified:   Peter Feichtinger   2015-04
 %
 %           Support for reading files written by LTspice XVII (which encodes text in UTF-16) added.
@@ -24,118 +27,129 @@ function raw_data = LTspice2Matlab( filename, varargin )
 %
 %
 %    Calling Convention:
-%        RAW_DATA = LTSPICE2MATLAB( FILENAME );                  %Returns all variables found in FILENAME
+%        RAW_DATA = LTspice2Matlab( FILENAME );                  % Returns all variables found in FILENAME
 %                             (or)
-%        RAW_DATA = LTSPICE2MATLAB( FILENAME, SELECTED_VARS );   %Returns only those variables covered by SELECTED_VARS
-%               Set SELECTED_VARS to [] to quickly determine the number and names of variables present in FILENAME
-%               without actually loading the variables.
+%        RAW_DATA = LTspice2Matlab( FILENAME, SELECTED_VARS );   % Returns only selected variables
+%               Set SELECTED_VARS to [] to quickly determine the number and names of variables present in
+%               FILENAME without actually loading the variables.
 %                             (or)
-%        RAW_DATA = LTSPICE2MATLAB( FILENAME, SELECTED_VARS, N );
-%               Returns variables listed in SELECTED_VARS, with all waveforms downsampled by N.  Set N > 1 to load very
-%               large data files using less memory, at the price of degraded waveform accuracy and possible aliasing.
+%        RAW_DATA = LTspice2Matlab( FILENAME, SELECTED_VARS, N );
+%               Returns variables listed in SELECTED_VARS, with all waveforms downsampled by N. Set N > 1 to
+%               load very large data files using less memory, at the price of degraded waveform accuracy and
+%               possible aliasing.
 %
-%    Inputs:  FILENAME is a string containing the name and path of the LTspiceIV .raw file to be converted.
+%    Inputs:  FILENAME is a string containing the name and path of the LTspice .raw file to be converted.
 %
-%             SELECTED_VARS (optional) is a vector of indexes indicating which variables to extract from the .raw file.
-%                  For example, if a .raw file has 14 variables and SELECTED_VARS is [1 8 9], then the output
-%                  RAW_DATA.VARIABLE_MAT will be a 3 x NUM_DATA_PNTS matrix containing waveforms for
-%                  variables 1, 8, and 9 only.  Note that SELECTED_VARS does not cover the time (or frequency) variable
-%                  (index 0), which is returned separately in RAW_DATA.TIME_VECT (or RAW_DATA.FREQ_VECT).  Extracting
-%                  only a subset of variables is a way to use less memory when loading very large simulation files.
+%             SELECTED_VARS (optional) is a vector of indexes indicating which variables to extract from the
+%                  .raw file. For example, if a .raw file has 14 variables and SELECTED_VARS is [1 8 9], then
+%                  the output RAW_DATA.variable_mat will be a 3 x num_data_pnts matrix containing waveforms
+%                  for variables 1, 8, and 9 only. Note that SELECTED_VARS does not cover the time (or
+%                  frequency) variable (index 0), which is returned separately in RAW_DATA.time_vect (or
+%                  RAW_DATA.freq_vect). Extracting only a subset of variables is a way to use less memory
+%                  when loading very large simulation files.
 %
-%                  If this parameter is not specified, then all variables are returned by default.  Setting
+%                  If this parameter is not specified, then all variables are returned by default. Setting
 %                  SELECTED_VARS to 'all' will also cause all variables to be returned.
 %
-%             *  To quickly determine the number and names of variables present in a .raw file, call LTspice2Matlab with
-%                  SELECTED_VARS set to [].  In this case, all fields in RAW_DATA will be populated, except
-%                  .TIME_VECT (or .FREQ_VECT) and .VARIABLE_MAT, which will both be empty ([]).  Since only the header
-%                  is read, the function call should execute very quickly, even for large files.
+%                  To quickly determine the number and names of variables present in a .raw file, call
+%                  LTspice2Matlab with SELECTED_VARS set to []. In this case, all fields in RAW_DATA will be
+%                  populated, except .time_vect (or .freq_vect) and .variable_mat, which will both be empty.
+%                  Since only the header is read, the function call should execute very quickly, even for
+%                  large files.
 %
-%             N (optional) must be a positive integer >= 1.  If N is specified, then SELECTED_VARS must also be
-%                  specified. If N is unspecified, it defaults to 1, which does not change the sampling rate.  If this
-%                  value is 2 or larger, the returned voltage, current, and time data will be downsampled by keeping
-%                  every N-th sample in the original data, starting with the first.
-%                  Caution:  No lowpass filtering is applied prior to downsampling, so aliasing may occur.  Also,
-%                  in many cases LTspice saves data with a non-constant sampling rate, in which case downsampling can
-%                  result in substantial waveform distortion.  This option should only be used if the waveform of
-%                  interest is initially oversampled.
+%             N (optional) must be a positive integer >= 1. If N is specified, then SELECTED_VARS must also
+%                  be specified. If N is unspecified, it defaults to 1, which does not change the sampling
+%                  rate. If this value is 2 or larger, the returned voltage, current, and time data will be
+%                  downsampled by keeping every N-th sample in the original data, starting with the first.
+%                  Caution: No lowpass filtering is applied prior to downsampling, so aliasing may occur.
+%                  Also, in many cases LTspice saves data with a non-constant sampling rate, in which case
+%                  downsampling can result in substantial waveform distortion. This option should only be
+%                  used if the waveform of interest is initially oversampled.
 %
-%    Outputs:  RAW_DATA is a Matlab structure containing the following fields ...
-%                  title:                String containing the title appearing in the .RAW file header.
-%                  date:                 String containing the date appearing in the .RAW file header.
-%                  plotname:             String indicating simulation type ('Transient Analysis', 'AC Analysis')
-%                  conversion_notes:     Description of modifications (if any) done to the data during conversion.
-%                  num_variables:        Number of variables (does not include the "time" or "frequency" variable)
-%                  variable_type_list:   A cell of strings indicating the variable type (i.e. voltage, current etc.)
+%    Outputs:  RAW_DATA is a Matlab structure containing the following fields:
+%                  title:                String containing the title appearing in the .raw file header.
+%                  date:                 String containing the date appearing in the .raw file header.
+%                  plotname:             String indicating simulation type (e.g. 'Transient Analysis')
+%                  conversion_notes:     Description of modifications (if any) done to the data during
+%                                        conversion.
+%                  num_variables:        Number of variables (does not include the time/frequency variable).
+%                  variable_type_list:   A cell of strings indicating the variable type (e.g. 'voltage').
 %                  variable_name_list:   A cell of strings indicating the name of each variable.
-%                  selected_vars:        A vector of indicies referencing VARIABLE_TYPE_LIST cells, corresponding
-%                                        to each row in VARIABLE_MAT.
+%                  selected_vars:        A vector of indicies referencing variable_type_list cells,
+%                                        corresponding to each row in variable_mat.
 %                  num_data_pnts:        Number of data points for each variable.
 %                  num_steps:            The number of steps for stepped simulations.
-%                  variable_mat:         Double precision matrix with NUM_VARIABLES rows and NUM_DATA_PNTS columns.
-%                                        This matrix contains node voltages (in Volts) and device currents (in Amps)
-%                                        for each variable and each time point listed in TIME_VECT (or FREQ_VECT).
-%                                        For AC Analysis simulations, VARIABLE_MAT will have complex values showing
-%                                        the real and imaginary components of the voltage or current at the
-%                                        corresponding frequency.  To convert this to log magnitude and normalized
-%                                        phase representation used in LTspice plots, use the following formulas:
+%                  variable_mat:         Double precision matrix with num_variables rows and num_data_pnts
+%                                        columns. This matrix contains node voltages (in Volts) and device
+%                                        currents (in Amps) for each variable and each time point listed in
+%                                        time_vect (or freq_vect).
+%                                        For AC Analysis simulations, variable_mat will have complex values
+%                                        showing the real and imaginary components of the voltage or current
+%                                        at the corresponding frequency. To convert this to log magnitude and
+%                                        normalized phase representation used in LTspice plots, use the
+%                                        following formulas:
 %                                            Log_Magnitude_dB    =  20*log10(abs(variable_mat))
-%                                            Norm_Phase_degrees  =  angle(variable_mat)*180/pi
-%                  time_vect:            [Field returned for Transient Analysis only] Double precision row vector of
-%                                        time values (in seconds) at each simulation point
+%                                            Norm_Phase_degrees  =  angle(variable_mat) * 180/pi
+%                  time_vect:            [Field returned for Transient Analysis only] Double precision row
+%                                        vector of time values (in seconds) at each simulation point.
 %                    (or)
 %                  freq_vect:            [Field returned for AC Analysis only] Double precision row vector of
-%                                        frequency values (in Hz) at each simulation point
+%                                        frequency values (in Hz) at each simulation point.
 %                    (or)
-%                  source_vect:          [Field returned for DC Sweeps only] Double precision row vector of source
-%                                        values (in Amperes or Volts) at each simulation point
+%                  source_vect:          [Field returned for DC Sweeps only] Double precision row vector of
+%                                        source values (in Amperes or Volts) at each simulation point.
 %                    (or)
-%                  param_vect:           [Field returned for stepped DC Operating Point or Transfer Function Analysis
-%                                        only] Double precision row vector of values for the stepped parameter
-%                  source_name:          [Field returned for DC Sweeps only] The name of the source that is swept.
+%                  param_vect:           [Field returned for stepped DC Operating Point or Transfer Function
+%                                        Analysis only] Double precision row vector of values for the stepped
+%                                        parameter.
+%                  source_name:          [Field returned for DC Sweeps only] The name of the source that is
+%                                        swept.
 %                    (or)
-%                  param_name:           [Field returned for stepped DC Operating Point or Transfer Function Analysis
-%                                        only] The name of the stepped parameter.
+%                  param_name:           [Field returned for stepped DC Operating Point or Transfer Function
+%                                        Analysis only] The name of the stepped parameter.
 %
-%                  ** For stepped simulations that have been properly recognized as such, an additional dimension is
-%                     added to variable_mat and the time, frequency, source or param vector, respectively.
+%                  ** For stepped simulations that have been properly recognized as such, an additional
+%                     dimension is added to variable_mat and the time, frequency, source or param vector,
+%                     respectively.
 %
 %    ** Currently this function is able to import results from Transient Analysis (.tran), AC Analysis (.ac),
-%       DC Sweeps (.dc), Operating Point Analysis (.op), Transfer Function (.tf) and Noise (.noise) simulations, and
-%       FFT calculations.
+%       DC Sweeps (.dc), Operating Point Analysis (.op), Transfer Function (.tf) and Noise (.noise)
+%       simulations, and FFT calculations (.four).
 %
 %
 %    Examples
 %    --------
-%    These examples assume you've run a .TRAN simulation in LTspice for a hypothetical file called
-%    BASIC_CIRCUIT.ASC, and that an output file called BASIC_CIRCUIT.RAW has been created.  It also assumes your
-%    current Matlab directory is pointing to the directory where the .RAW file is located (or that you prepended
-%    the full path to the input parameter FILENAME).
+%    These examples assume you've run a .tran simulation in LTspice for a hypothetical file called
+%    BASIC_CIRCUIT.ASC, and that an output file called BASIC_CIRCUIT.RAW has been created. It also
+%    assumes your current MATLAB directory is pointing to the directory where the .raw file is
+%    located (or that you prepended the full path to the input parameter FILENAME).
 %
-%    To import BASIC_CIRCUIT.RAW into Matlab and create a labeled plot of a single variable vs. time:
+%    To import BASIC_CIRCUIT.RAW into MATLAB and create a labeled plot of a single variable vs. time:
 %
 %       raw_data = LTspice2Matlab('BASIC_CIRCUIT.RAW');
-%       variable_to_plot = 1;   %This example plots the first variable in the data structure.
-%       plot(raw_data.time_vect, raw_data.variable_mat(variable_to_plot,:), 'k');
-%       title(sprintf('Waveform %s', raw_data.variable_name_list{variable_to_plot}));
-%       ylabel(raw_data.variable_type_list{variable_to_plot} );
-%       xlabel('Time (sec)' );
+%       variable_to_plot = 1;   % This example plots the first variable in the data structure.
+%       plot( raw_data.time_vect, raw_data.variable_mat(variable_to_plot,:), 'k' );
+%       title( sprintf('Waveform %s', raw_data.variable_name_list{variable_to_plot}) );
+%       ylabel( raw_data.variable_type_list{variable_to_plot} );
+%       xlabel( 'Time (sec)' );
 %
 %    To superimpose all variables in BASIC_CIRCUIT.RAW on a single graph with a legend:
 %
 %       raw_data = LTspice2Matlab('BASIC_CIRCUIT.RAW');
-%       plot(raw_data.time_vect, raw_data.variable_mat);
-%       title(sprintf( 'File:  %s', raw_data.title));
-%       legend(raw_data.variable_name_list);
-%       ylabel('Voltage (V) or Current (A)');
-%       xlabel('Time (sec)');
+%       plot( raw_data.time_vect, raw_data.variable_mat );
+%       title( sprintf( 'File:  %s', raw_data.title) );
+%       legend( raw_data.variable_name_list );
+%       ylabel( 'Voltage (V) or Current (A)' );
+%       xlabel( 'Time (sec)' );
 %
-%     To quickly determine the number and names of variables in BASIC_CIRCUIT.RAW without loading the entire file:
+%     To quickly determine the number and names of variables in BASIC_CIRCUIT.RAW without loading the entire
+%     file:
 %
 %       raw_data = LTspice2Matlab('BASIC_CIRCUIT.RAW', []);
-%       disp(sprintf( '\n\nThis file contains %.0f variables:\n', raw_data.num_variables));
-%       disp(sprintf('NAME         TYPE\n-------------------------'));
-%       disp([char(raw_data.variable_name_list), char(zeros(raw_data.num_variables,5)), char(raw_data.variable_type_list)]);
+%       disp( sprintf('\n\nThis file contains %.0f variables:\n', raw_data.num_variables) );
+%       disp( sprintf('NAME         TYPE\n-------------------------') );
+%       disp( [char(raw_data.variable_name_list), char(zeros(raw_data.num_variables,5)), ...
+%              char(raw_data.variable_type_list)] );
 %
 
     % Initialize the output structure.
@@ -329,7 +343,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
     elseif contains(raw_data.plotname, 'noise spectral density', 'IgnoreCase',true),       simulation_type = '.noise';
     else
     	try fclose( fid );  catch, end
-        error( 'Currently LTspice2Matlab is only able to import results from Transient Analysis (.tran), AC Analysis (.ac), Operating Point (.op), Transfer Function (.tf), DC Sweep (.dc), Noise (.noise) simulations and FFT calculations.' );
+        error( 'Currently LTspice2Matlab is only able to import results from Transient Analysis (.tran), AC Analysis (.ac), Operating Point (.op), Transfer Function (.tf), DC Sweep (.dc), Noise (.noise) simulations and FFT (.four) calculations.' );
     end
 
     % Check for the expected formats for every simulation type
