@@ -512,16 +512,23 @@ function raw_data = LTspice2Matlab( filename, varargin )
                             'Stepped data found and downsampling enabled. Steps may not be recognized properly.' );
                 end
 
-                % Stepped data starts on a duplicate entry
+                % Stepped data starts on a duplicate entry in LTspice IV
                 steps = find( diff(raw_data.time_vect) == 0.0 );
-                num_steps = numel(steps) + 1;
+                if numel(steps) > 0
+                    % Remove duplicate entries
+                    raw_data.variable_mat(:,steps) = [];
+                    raw_data.time_vect(steps) = [];
+
+                    num_steps = numel(steps) + 1;
+                else
+                    % Stepped data starts with the same time/source value in LTspice XVII
+                    num_steps = numel(find( raw_data.time_vect == raw_data.time_vect(1) ));
+                end
+
                 raw_data.num_steps = num_steps;
-                % Remove duplicate entries and reshape value matrix
-                raw_data.variable_mat(:,steps) = [];
+                % Reshape value matrix and time/source vector
                 mat_size = size(raw_data.variable_mat);
                 raw_data.variable_mat = reshape(raw_data.variable_mat, mat_size(1), mat_size(2) / num_steps, num_steps);
-                % Same for the time/source vector
-                raw_data.time_vect(steps) = [];
                 raw_data.time_vect = reshape(raw_data.time_vect, mat_size(2) / num_steps, num_steps).';
                 % Update num_data_pnts
                 raw_data.num_data_pnts = mat_size(2) / num_steps;
