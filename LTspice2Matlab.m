@@ -177,7 +177,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
 
     % Try to open file
     filename = strtrim(filename);   % Remove leading and trailing spaces from filename.
-	fid = fopen(filename, 'rb');
+    fid = fopen(filename, 'rb');
     if length(fid) == 1 && isnumeric(fid) && fid == -1
         % try to append ".raw" to the file name ...
         fid = fopen(sprintf( '%s.raw', filename ), 'rb');
@@ -186,7 +186,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
         end
     end
 
-	[filename, ~, machineformat] = fopen(fid);
+    [filename, ~, machineformat] = fopen(fid);
 
     % Detect text encoding: LTspice IV uses ASCII, LTspice XVII uses UTF-16
     utf16 = false;
@@ -342,7 +342,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
     elseif contains(raw_data.plotname, 'fft of time domain data', 'IgnoreCase',true),      simulation_type = '.four';
     elseif contains(raw_data.plotname, 'noise spectral density', 'IgnoreCase',true),       simulation_type = '.noise';
     else
-    	try fclose( fid );  catch, end
+        try fclose( fid );  catch, end
         error( 'Currently LTspice2Matlab is only able to import results from Transient Analysis (.tran), AC Analysis (.ac), Operating Point (.op), Transfer Function (.tf), DC Sweep (.dc), Noise (.noise) simulations and FFT (.four) calculations.' );
     end
 
@@ -361,7 +361,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
                 try fclose( fid );  catch, end
                 error( 'Expected to find "forward" flag for a Transient Analysis (.tran) simulation.  Unsure how to convert the data' );
             end
-            
+
         case '.ac'
             if ~contains(raw_data.flags, 'complex', 'IgnoreCase',true)
                 try fclose( fid );  catch, end
@@ -371,7 +371,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
                 try fclose( fid );  catch, end
                 error( 'Expected to find "forward" flag for an AC Analysis (.ac) simulation.  Unsure how to convert the data' );
             end
-            
+
         case '.dc'
             if ~contains(raw_data.flags, 'real', 'IgnoreCase',true)
                 try fclose( fid );  catch, end
@@ -381,19 +381,19 @@ function raw_data = LTspice2Matlab( filename, varargin )
                 try fclose( fid );  catch, end
                 error( 'Expected to find "forward" flag for a DC Sweep (.dc) simulation.  Unsure how to convert the data' );
             end
-            
+
         case '.op'
             if ~contains(raw_data.flags, 'real', 'IgnoreCase',true)
                 try fclose( fid );  catch, end
                 error( 'Expected to find "real" flag for an Operating Point (.op) simulation.  Unsure how to convert the data' );
             end
-            
+
         case '.tf'
             if ~contains(raw_data.flags, 'real', 'IgnoreCase',true)
                 try fclose( fid );  catch, end
                 error( 'Expected to find "real" flag for a Transfer function (.tf) simulation.  Unsure how to convert the data' );
             end
-            
+
         case '.four'
             if ~contains(raw_data.flags, 'complex', 'IgnoreCase',true)
                 try fclose( fid );  catch, end
@@ -403,7 +403,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
                 try fclose( fid );  catch, end
                 error( 'Expected to find "forward" flag for an FFT calculation.  Unsure how to convert the data' );
             end
-            
+
         case '.noise'
             if ~contains(raw_data.flags, 'real', 'IgnoreCase',true)
                 try fclose( fid );  catch, end
@@ -504,14 +504,14 @@ function raw_data = LTspice2Matlab( filename, varargin )
 
             fseek(fid, binary_start, 'bof');    % rewind to start, then extract the time/source vector.
             raw_data.time_vect = fread( fid, NumPnts_DS, 'double', (NumVars-1)*4 + (downsamp_N-1)*(NumVars+1)*4, machineformat ).';
-            
+
             % Process stepped data
             if step_flag
                 if downsamp_N > 1
                     warning( 'LTspice2Matlab:downsampleSteps', ...
                             'Stepped data found and downsampling enabled. Steps may not be recognized properly.' );
                 end
-                
+
                 % Stepped data starts on a duplicate entry
                 steps = find( diff(raw_data.time_vect) == 0.0 );
                 num_steps = numel(steps) + 1;
@@ -526,7 +526,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
                 % Update num_data_pnts
                 raw_data.num_data_pnts = mat_size(2) / num_steps;
             end
-            
+
             % Rename time_vect and add source name for .dc simulations
             if strcmpi( simulation_type, '.dc' )
                raw_data.source_vect = raw_data.time_vect;
@@ -567,7 +567,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
 
             fseek(fid, binary_start, 'bof');    % rewind to start, then extract the time vector.
             raw_data.freq_vect = fread( fid, NumPnts_DS, 'double', (NumVars-1)*16 + 8 + (downsamp_N-1)*NumVars*16, machineformat ).';
-            
+
             % Process stepped data
             if step_flag
                 % Stepped data starts with low frequency again, should work with downsampled data
@@ -581,13 +581,13 @@ function raw_data = LTspice2Matlab( filename, varargin )
                 % Update num_data_pnts
                 raw_data.num_data_pnts = mat_size(2) / num_steps;
             end
-            
+
         elseif strcmpi( simulation_type, '.op' ) || strcmpi( simulation_type, '.tf' )
             % For simple Operating Point and Transfer Function simulations, the first variable is stored in double
             % precision format (8 bytes), the remaining variables are stored in single precision format.
             % For stepped Operating point and Transfer Function simulations, the stepping parameter is stored in double
             % precision format (8 bytes) and the variables are stored in single precision format.
-            
+
             if step_flag
                 % Extract the binary data in the fewest possible number of contiguous blocks
                 if length(selected_vars) > 1
@@ -597,7 +597,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
                 else
                     block_list = {1:length(selected_vars)};
                 end
-                
+
                 raw_data.variable_mat = zeros(length(selected_vars), NumPnts_DS);  % Initialize.
                 for k=1:length(block_list)
                     target_var_index = selected_vars(block_list{k});
@@ -607,7 +607,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
                     precision_str = sprintf('%.0f*float',TVIL);
                     raw_data.variable_mat(block_list{k},:) = reshape( fread(fid, NumPnts_DS*TVIL, precision_str, bytes_skip, machineformat), TVIL, NumPnts_DS );
                 end
-                
+
                 fseek(fid, binary_start, 'bof');    % rewind to start, then extract the step parameter vector.
                 raw_data.param_vect = fread( fid, NumPnts_DS, 'double', (NumVars-1)*4 + (downsamp_N-1)*(NumVars+1)*4, machineformat ).';
                 raw_data.param_name = variable_name_list{1};
@@ -625,14 +625,14 @@ function raw_data = LTspice2Matlab( filename, varargin )
                 raw_data.variable_name_list = variable_name_list;
                 raw_data.variable_type_list = variable_type_list;
                 raw_data.num_variables = NumVars;
-                
+
             end
-            
+
         else
             try fclose( fid );  catch, end
             error( 'Simulation type (%s) not currently supported', simulation_type );
         end
-        
+
         if downsamp_N == 1
             raw_data.conversion_notes = 'Converted from Binary format';
         else
@@ -650,13 +650,13 @@ function raw_data = LTspice2Matlab( filename, varargin )
             end
             raw_data.time_vect = raw_data.variable_mat(2,1:downsamp_N:end);
             raw_data.variable_mat = raw_data.variable_mat(2+selected_vars,1:downsamp_N:end);
-            
+
             % Process stepped data
             if step_flag
                 if downsamp_N > 1
                    warning( 'LTspice2Matlab:downsampleSteps', 'Stepped data found and downsampling enabled. Steps may not be recognized properly.' );
                 end
-                
+
                 % Stepped data starts with same start time/source value
                 num_steps = numel(find( raw_data.time_vect == raw_data.time_vect(1) ));
                 raw_data.num_steps = num_steps;
@@ -667,7 +667,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
                 % Update num_data_pnts
                 raw_data.num_data_pnts = mat_size(2) / num_steps;
             end
-            
+
             % Rename time_vect and add source name for .dc simulations
             if strcmpi( simulation_type, '.dc' )
                raw_data.source_vect = raw_data.time_vect;
@@ -702,11 +702,11 @@ function raw_data = LTspice2Matlab( filename, varargin )
                 % Update num_data_pnts
                 raw_data.num_data_pnts = mat_size(2) / num_steps;
             end
-            
+
         elseif strcmpi( simulation_type, '.op' ) || strcmpi( simulation_type, '.tf' )
             % Format: point number, first value, var2, var3 ... varN
             % Format stepped: point number, step parameter, var1, var2 ... varN
-            
+
             if step_flag
                 raw_data.variable_mat = fscanf( fid, '%g', [raw_data.num_variables+2, raw_data.num_data_pnts] );   %matrix is filled in column order.
                 if (size(raw_data.variable_mat,1) ~= raw_data.num_variables+2) || (size(raw_data.variable_mat,2) ~= raw_data.num_data_pnts)
@@ -717,7 +717,7 @@ function raw_data = LTspice2Matlab( filename, varargin )
                 raw_data.param_name = variable_name_list{1};
                 raw_data.num_steps = raw_data.num_data_pnts;
                 raw_data.num_data_pnts = 1;
-                
+
             else
                 raw_data.variable_mat = fscanf( fid, '%g', [raw_data.num_variables+2, raw_data.num_data_pnts] );   %matrix is filled in column order.
                 if (size(raw_data.variable_mat,1) ~= raw_data.num_variables+2) || (size(raw_data.variable_mat,2) ~= raw_data.num_data_pnts)
@@ -729,9 +729,9 @@ function raw_data = LTspice2Matlab( filename, varargin )
                 raw_data.variable_name_list = variable_name_list;
                 raw_data.variable_type_list = variable_type_list;
                 raw_data.num_variables = NumVars;
-                
+
             end
-            
+
         else
             try fclose( fid );  catch, end
             error( 'Simulation type (%s) not currently supported', simulation_type );
