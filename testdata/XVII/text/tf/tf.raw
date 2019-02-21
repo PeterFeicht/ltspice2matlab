@@ -1,0 +1,16 @@
+Title: * E:\Eigene Dateien\Visual Studio Projects\git\ltspice2matlab\testdata\XVII\text\tf\tf.asc
+Date: Thu Feb 21 17:03:11 2019
+Plotname: Transfer Function
+Flags: real
+No. Variables: 3
+No. Points:            1
+Offset:   0.0000000000000000e+000
+Command: Linear Technology Corporation LTspice XVII -- Alternate Solver
+Variables:
+	0	Transfer_function	transfer
+	1	v3#Input_impedance	impedance
+	2	output_impedance_at_V(uc2)	impedance
+Values:
+0		-1.462391968922287e-002
+	2.030286442856883e+006
+	1.425596200940575e+003

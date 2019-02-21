@@ -1,0 +1,16 @@
+Title: * E:\Temp\raw\ascii\tf\tf.asc
+Date: Fri Aug 02 17:57:10 2013
+Plotname: Transfer Function
+Flags: real
+No. Variables: 3
+No. Points:            1
+Offset:   0.0000000000000000e+000
+Command: Linear Technology Corporation LTspice IV
+Variables:
+	0	Transfer_function	transfer
+	1	v3#Input_impedance	impedance
+	2	output_impedance_at_V(uc2)	impedance
+Values:
+0		-1.462391968917418e-002
+	2.030286442857830e+006
+	1.425596200940291e+003

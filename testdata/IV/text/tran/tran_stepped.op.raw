@@ -1,0 +1,56 @@
+Title: * E:\Temp\raw\ascii\tran\tran_stepped.asc
+Date: Fri Aug 02 17:57:37 2013
+Plotname: Operating Point
+Flags: real stepped
+No. Variables: 23
+No. Points:            1
+Offset:   0.0000000000000000e+000
+Command: Linear Technology Corporation LTspice IV
+Variables:
+	0	iq	param
+	1	V(uc1)	voltage
+	2	V(ue1)	voltage
+	3	V(ue12)	voltage
+	4	V(uc2)	voltage
+	5	V(ue2)	voltage
+	6	V(vee)	voltage
+	7	V(vcc)	voltage
+	8	V(ued)	voltage
+	9	Ic(Q2)	device_current
+	10	Ib(Q2)	device_current
+	11	Ie(Q2)	device_current
+	12	Ic(Q1)	device_current
+	13	Ib(Q1)	device_current
+	14	Ie(Q1)	device_current
+	15	I(I1)	device_current
+	16	I(R2)	device_current
+	17	I(R1)	device_current
+	18	I(E2)	device_current
+	19	I(E1)	device_current
+	20	I(V1)	device_current
+	21	I(Ve)	device_current
+	22	I(Vc)	device_current
+Values:
+0		5.000000000000000e-003
+	1.126065760855976e+001
+	0.000000000000000e+000
+	-6.841541034902620e-001
+	1.126065760855882e+001
+	0.000000000000000e+000
+	-1.500000000000000e+001
+	1.500000000000000e+001
+	0.000000000000000e+000
+	2.492894927628766e-003
+	7.105075210837909e-006
+	-2.500001046852188e-003
+	2.492894927626944e-003
+	7.105075210844848e-006
+	-2.500001046852227e-003
+	5.000000000000000e-003
+	2.492894927627453e-003
+	2.492894927626824e-003
+	-7.105072373087475e-006
+	-7.105072373080545e-006
+	0.000000000000000e+000
+	-5.000000000000000e-003
+	-4.985789855254276e-003

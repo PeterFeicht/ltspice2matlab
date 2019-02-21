@@ -1,0 +1,50 @@
+Title: * E:\Temp\raw\ascii\tf\tf_stepped.asc
+Date: Fri Aug 02 17:57:14 2013
+Plotname: Operating Point
+Flags: real stepped
+No. Variables: 20
+No. Points:            1
+Offset:   0.0000000000000000e+000
+Command: Linear Technology Corporation LTspice IV
+Variables:
+	0	iq	param
+	1	V(uc1)	voltage
+	2	V(ue)	voltage
+	3	V(ue12)	voltage
+	4	V(uc2)	voltage
+	5	V(vee)	voltage
+	6	V(vcc)	voltage
+	7	Ic(Q2)	device_current
+	8	Ib(Q2)	device_current
+	9	Ie(Q2)	device_current
+	10	Ic(Q1)	device_current
+	11	Ib(Q1)	device_current
+	12	Ie(Q1)	device_current
+	13	I(I1)	device_current
+	14	I(Ri)	device_current
+	15	I(R2)	device_current
+	16	I(R1)	device_current
+	17	I(V3)	device_current
+	18	I(Ve)	device_current
+	19	I(Vc)	device_current
+Values:
+0		5.000000000000000e-003
+	1.104655675384686e+001
+	0.000000000000000e+000
+	-6.857065388369065e-001
+	1.104655675384655e+001
+	-1.500000000000000e+001
+	1.500000000000000e+001
+	2.635628830768839e-003
+	7.514105385502479e-006
+	-2.643143500276589e-003
+	2.635628830768839e-003
+	7.514105385488601e-006
+	-2.643143500276586e-003
+	5.000000000000000e-003
+	2.862858692232619e-004
+	2.635628830768964e-003
+	2.635628830768763e-003
+	-1.502820768423554e-005
+	-5.286285869223262e-003
+	-5.271257661537726e-003

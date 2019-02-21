@@ -1,0 +1,50 @@
+Title: * E:\Eigene Dateien\Visual Studio Projects\git\ltspice2matlab\testdata\XVII\text\tf\tf_stepped.asc
+Date: Thu Feb 21 17:03:08 2019
+Plotname: Operating Point
+Flags: real stepped
+No. Variables: 20
+No. Points:            1
+Offset:   0.0000000000000000e+000
+Command: Linear Technology Corporation LTspice XVII -- Alternate Solver
+Variables:
+	0	iq	param
+	1	V(uc1)	voltage
+	2	V(ue)	voltage
+	3	V(ue12)	voltage
+	4	V(uc2)	voltage
+	5	V(vee)	voltage
+	6	V(vcc)	voltage
+	7	Ic(Q2)	device_current
+	8	Ib(Q2)	device_current
+	9	Ie(Q2)	device_current
+	10	Ic(Q1)	device_current
+	11	Ib(Q1)	device_current
+	12	Ie(Q1)	device_current
+	13	I(I1)	device_current
+	14	I(Ri)	device_current
+	15	I(R2)	device_current
+	16	I(R1)	device_current
+	17	I(V3)	device_current
+	18	I(Ve)	device_current
+	19	I(Vc)	device_current
+Values:
+0		5.000000000000000e-003
+	1.104655675384573e+001
+	0.000000000000000e+000
+	-6.857065388369068e-001
+	1.104655675384573e+001
+	-1.500000000000000e+001
+	1.500000000000000e+001
+	2.635628830769515e-003
+	7.514105385494835e-006
+	-2.643143500276591e-003
+	2.635628830769515e-003
+	7.514105385494842e-006
+	-2.643143500276591e-003
+	5.000000000000000e-003
+	2.862858692232618e-004
+	2.635628830769515e-003
+	2.635628830769515e-003
+	-1.502820768423163e-005
+	-5.286285869223262e-003
+	-5.271257661539030e-003

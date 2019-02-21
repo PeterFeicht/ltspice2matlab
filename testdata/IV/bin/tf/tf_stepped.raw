@@ -1,0 +1,15 @@
+Title: * E:\Temp\raw\tf_stepped.asc
+Date: Fri Aug 02 15:31:49 2013
+Plotname: Transfer Function
+Flags: real stepped
+No. Variables: 4
+No. Points:           16
+Offset:   0.0000000000000000e+000
+Command: Linear Technology Corporation LTspice IV
+Variables:
+	0	iq	param
+	1	Transfer_function	transfer
+	2	v3#Input_impedance	impedance
+	3	output_impedance_at_V(uc2)	impedance
+Binary:
+{®Gázt?>Žr¼v°rJ¦¸¶Dú~j¼t“x?Dr¼0-OJ1ÑµDyé&1¬|?yxq¼Èt3J¶é´Dü©ñÒMb€?xáp¼ò<J)´D<ßO—n‚?âAp¼ÖJ¥³D|®Gáz„?*™o¼tÖ÷I3²D¼I+‡†?Ææn¼6CÞIyK±Dü~j¼t“ˆ?*n¼fÈIÕc°D<´Èv¾ŸŠ?bm¼ÑƒµI'|¯D|é&1¬Œ?ml¼b¥In”®D¼…ëQ¸Ž?ö¯k¼xœ–Iª¬­Dþ©ñÒMb?cÃj¼…Ö‰IÚÄ¬DžÄ °rh‘?ÛÈi¼"õ|IýÜ«D>ßO—n’?g¿h¼ä¤hIõªDÞù~j¼t“?,¦g¼CgVIªD{®Gáz”?‘zf¼àEI	%©D

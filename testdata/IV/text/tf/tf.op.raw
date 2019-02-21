@@ -1,0 +1,48 @@
+Title: * E:\Temp\raw\ascii\tf\tf.asc
+Date: Fri Aug 02 17:57:10 2013
+Plotname: Operating Point
+Flags: real
+No. Variables: 19
+No. Points:            1
+Offset:   0.0000000000000000e+000
+Command: Linear Technology Corporation LTspice IV
+Variables:
+	0	V(uc1)	voltage
+	1	V(ue)	voltage
+	2	V(ue12)	voltage
+	3	V(uc2)	voltage
+	4	V(vee)	voltage
+	5	V(vcc)	voltage
+	6	Ic(Q2)	device_current
+	7	Ib(Q2)	device_current
+	8	Ie(Q2)	device_current
+	9	Ic(Q1)	device_current
+	10	Ib(Q1)	device_current
+	11	Ie(Q1)	device_current
+	12	I(I1)	device_current
+	13	I(Ri)	device_current
+	14	I(R2)	device_current
+	15	I(R1)	device_current
+	16	I(V3)	device_current
+	17	I(Ve)	device_current
+	18	I(Vc)	device_current
+Values:
+0		7.308255262692700e+000
+	0.000000000000000e+000
+	-7.049448099577554e-001
+	7.308255262692149e+000
+	-1.500000000000000e+001
+	1.500000000000000e+001
+	5.127829824872574e-003
+	1.512076248779007e-005
+	-5.142961982342778e-003
+	5.127829824872574e-003
+	1.512076248773456e-005
+	-5.142961982342790e-003
+	1.000000000000000e-002
+	2.859011038008449e-004
+	5.127829824871900e-003
+	5.127829824871534e-003
+	-3.024145405784024e-005
+	-1.028590110380085e-002
+	-1.025565964974344e-002
